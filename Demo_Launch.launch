@@ -1,0 +1,40 @@
+  <launch>
+  
+    <node pkg="turtlesim" type="turtlesim_node" name="sim"/>
+    <node pkg="turtlesim" type="turtle_teleop_key" name="teleop" output="screen">
+    </node>
+  <!--
+    <node pkg="turtlesim" type="turtle_teleop_key" name="teleop" output="screen">
+    </node>
+    <param name="scale_linear" value="2" type="double"/>
+    <param name="scale_angular" value="6.29" type="double"/>
+    <node pkg="turtlesim" type="turtlesim_node" name="sim"/>
+    <node pkg="tf2_myturtle" type="teleop_twist_keyboard_copy.py" name="teleop" output="screen"/>-->
+
+    <node name="turtle1_tf2_broadcaster" pkg="tf2_myturtle" type="turtle_tf2_broadcaster.py" respawn="false" output="screen" >
+      <param name="turtle" type="string" value="treasure" />
+    </node>
+    <node name="turtle2_tf2_broadcaster" pkg="tf2_myturtle" type="turtle_tf2_broadcaster.py" respawn="false" output="screen" >
+      <param name="turtle" type="string" value="guardw" /> 
+    </node>
+    
+    <node name="turtle3_tf2_broadcaster" pkg="tf2_myturtle" type="turtle_tf2_broadcaster.py" respawn="false" output="screen" >
+      <param name="turtle" type="string" value="guards" /> 
+    </node>
+    <node name="turtle4_tf2_broadcaster" pkg="tf2_myturtle" type="turtle_tf2_broadcaster.py" respawn="false" output="screen" >
+      <param name="turtle" type="string" value="guarde" /> 
+    </node>
+    <node name="turtle5_tf2_broadcaster" pkg="tf2_myturtle" type="turtle_tf2_broadcaster.py" respawn="false" output="screen" >
+      <param name="turtle" type="string" value="guardn" /> 
+    </node>
+    <node name="turtle6_tf2_broadcaster" pkg="tf2_myturtle" type="turtle_tf2_broadcaster.py" respawn="false" output="screen" >
+      <param name="turtle" type="string" value="intruder" /> 
+    </node>
+
+    
+
+    <node pkg="tf2_myturtle" type="turtle_tf2_listener.py" 
+          name="listener" output="screen"/>
+
+ 
+  </launch>
