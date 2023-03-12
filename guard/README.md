@@ -17,5 +17,5 @@ There are some points we want to achieve:
 1.     Block at desired position and strategy
 2.     Don’t hit each other or obstacles
 3.     Have some extra strategies
-4.    The job is done with high efficiency(high speed and high accuracy)
-5.    Never lose the target object
+4.     The job is done with high efficiency(high speed and high accuracy)
+5.     Never lose the target object
