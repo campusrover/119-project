@@ -1,9 +1,11 @@
-Project Name: GuardBot Team
-Team Members: 	Liulu Yue	liuluyue@brandeis.edu
-				Karen Mai	karenmai@brandeis.edu
-				Rongzi Xie	rongzixie@brandeis.edu
+1.Project Name: 	GuardBot Team
+Team Members: 	
+	Liulu Yue	liuluyue@brandeis.edu
+	Karen Mai	karenmai@brandeis.edu
+	Rongzi Xie	rongzixie@brandeis.edu
 
-We want to build a “GuardBot Team”, which includes multiple GuardBots and can be used to guard objects. Each GuardBot is able to recognize the target object, find the object and patrol around it, detect intruders, block the intruders to guard the object, and go to the owner of the object to notify intruding if the intruder would not go away after certain time period. 
+2.We want to build a “GuardBot Team”, which includes multiple GuardBots and can be used to guard objects. Each GuardBot is able to recognize the target object, find the object and patrol around it, detect intruders, block the intruders to guard the object, and go to the owner of the object to notify intruding if the intruder would not go away after certain time period. 
+
 On the showcase day, we want to have four GuardBots to form our GuardBot Team, an object that is able to move (eg. a toy car), some objects as obstacles in the room, a person playing the role of owner, and another person playing the role of the intruder. We want to demonstrate that GuardBots are able to recognize the object that needs to be guarded from all other objects in the room, and can go to the object and patrol around it without crashing into other obstacles. Then we will let the object move to see if GuardBots are still able to patrol around it. After the GuardBots patrol around the object for a while, we will have the intruder go to the object and try to grab it. GuardBots are expected to form a line in front of the intruder and block his way to the robot. The intruder would still want to go to the object, so we will see one of the GuardBot will find the way to the owner and notify him/her that the object is “in danger”.     
       
 The basis of this project is to let 4 robots run on a single Ros core and we can have access to all of them.
