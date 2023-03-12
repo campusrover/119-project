@@ -1,8 +1,8 @@
 1.Project Name: 	GuardBot Team
 Team Members: 	
-	\nLiulu Yue	liuluyue@brandeis.edu
-	\nKaren Mai	karenmai@brandeis.edu
-	\nRongzi Xie	rongzixie@brandeis.edu
+Liulu Yue	liuluyue@brandeis.edu
+Karen Mai	karenmai@brandeis.edu
+Rongzi Xie	rongzixie@brandeis.edu
 
 2.We want to build a “GuardBot Team”, which includes multiple GuardBots and can be used to guard objects. Each GuardBot is able to recognize the target object, find the object and patrol around it, detect intruders, block the intruders to guard the object, and go to the owner of the object to notify intruding if the intruder would not go away after certain time period. 
 
