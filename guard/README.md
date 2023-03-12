@@ -1,5 +1,5 @@
-1.Project Name: 	<br />
-GuardBot Team
+1.Project Name: 
+GuardBot Team<br />
 Team Members: <br />	
 Liulu Yue	liuluyue@brandeis.edu<br />
 Karen Mai	karenmai@brandeis.edu<br />
