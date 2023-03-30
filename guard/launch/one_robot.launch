@@ -8,7 +8,7 @@
      args="$(arg init_pose) -urdf -param /robot_description -model $(arg robot_name)"
      respawn="false" output="screen" />
 
-     <node name="$(arg robot_name)_revolve" type="revolveAroundObject.py" pkg = "guard" >
+     <node name="$(arg robot_name)_revolve" type="lineF.py" pkg = "guard" >
          <param name="robot_name" type = "str" value = "$(arg robot_name)" /> 
          </node>
 

@@ -15,6 +15,7 @@ class Follower:
         self.lostcount = 0
         self.state = 'find'
 
+
     def image_callback(self, msg):
         print("in here")
         # get image from camera
