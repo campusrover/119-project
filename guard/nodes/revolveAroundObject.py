@@ -13,8 +13,11 @@ import math
 import numpy
 from tf.transformations import euler_from_quaternion
 
+
 class Robot(): 
-    def __init__(self): 
+    def __init__(self,name): 
+        
+        self.which_robo = name
 
         # How fast the robot is going to travel and distance away object
         self.angular_speed = 0.2
@@ -56,9 +59,9 @@ class Robot():
 
         # Simple set ups 
         self.yaw = 0
-        scan_sub = rospy.Subscriber('/scan', LaserScan, self.scan_cb)
-        self.odom_sub = rospy.Subscriber ('/odom', Odometry, self.odom_cb)
-        self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+        scan_sub = rospy.Subscriber(f'/{self.which_robo}/scan', LaserScan, self.scan_cb)
+        self.odom_sub = rospy.Subscriber (f'/{self.which_robo}/odom', Odometry, self.odom_cb)
+        self.vel_pub = rospy.Publisher(f'/{self.which_robo}/cmd_vel', Twist, queue_size=1)
         self.vel_msg = Twist()
 
          # used for PID 
@@ -215,8 +218,9 @@ class Robot():
 
 # Main Function to run 
 def main():
-    wall_robot = Robot()
     rospy.init_node('wall_follower')
+    which_robo = rospy.get_param("~robot_name")
+    wall_robot = Robot(which_robo)
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         wall_robot.around_object() 
