@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from tf import transformations
 from tf.transformations import euler_from_quaternion
-
+from see_intruder.msg import see_intruder
 
 
 # rip a lot out of it, how ofeten is callback being called, do a rostopic hz, experiment with reducing image size and color, lower the raspicam_node resolution
