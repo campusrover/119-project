@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from tf import transformations
 from tf.transformations import euler_from_quaternion
+from see_intruder.msg import see_intruder
 
 class Follower:
     def __init__(self,name):
