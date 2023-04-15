@@ -37,6 +37,20 @@ class Follower:
         self.scan_sub = rospy.Subscriber(f'/{self.which_robo}/scan', LaserScan, self.scan_cb)
         self.vel_msg = Twist()
         self.detect_intruder_pub = rospy.Publsiher(self.dummy+'/see_intruder', see_intruder, queue_size=1)
+        self.which_robo_see = ""
+        self.color_dict = {"rob_a": {"color": "red","low": numpy.array([155,25,0]), "high": numpy.array([245,222,222])}, "rob_b": {"color":"green", "low":numpy.array([45, 100, 100]), "high":numpy.array([75, 255, 255])},
+        "rob_c": {"color": "blue", "low": numpy.array([110,50,50]),"high":numpy.array([130,255,255])}, "rob_d": {"color": "yellow", "low": numpy.array([5, 100, 100]), "high": numpy.array([40, 255, 255])}}
+
+
+# This is the method that will be making the robot find the line that it is going to be following. 
+    def see_intruder_callback(self, msg):
+        if msg.rob_d.data:
+            self.which_robo_see = "rob_d"
+        elif msg.rob_c.data:
+            self.which_robo_see = "rob_c"
+        elif msg.rob_a.data:
+            self.which_robo_see = "rob_a"
+
 
 
 
