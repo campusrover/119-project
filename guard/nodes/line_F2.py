@@ -122,7 +122,7 @@ class Follower:
             self.intruder = True
             self.i_state = "turn"
             msg = see_intruder()
-            msg.rob_a.data = True
+            msg.rob_b.data = True
             self.detect_intruder_pub.publish(msg)
     
     def start(self): 
