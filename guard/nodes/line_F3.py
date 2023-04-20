@@ -35,7 +35,7 @@ class Follower:
         self.region = {}
         self.scan_sub = rospy.Subscriber(self.dummy+'/scan', LaserScan, self.scan_cb)
         self.vel_msg = Twist()
-        self.detect_intruder_pub = rospy.Publsiher(self.dummy+'/see_intruder', see_intruder, queue_size=1)
+        self.detect_intruder_pub = rospy.Publisher(self.dummy+'/see_intruder', see_intruder, queue_size=1)
         self.detect_intruder_sub=rospy.Subscriber(self.dummy+'/see_intruder', see_intruder,see_intruder_callback)
         self.which_robo_see = ""
         self.color_dict = {"rob_a": {"color": "red","low": numpy.array([155,25,0]), "high": numpy.array([245,222,222])}, "rob_b": {"color":"green", "low":numpy.array([45, 100, 100]), "high":numpy.array([75, 255, 255])},
