@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from tf import transformations
 from tf.transformations import euler_from_quaternion
-from see_intruder.msg import see_intruder
+from communication_msg.msg import see_intruder as see_intruder
 
 class Follower:
     def __init__(self,name):
@@ -34,10 +34,10 @@ class Follower:
         self.intruder = False
         self.i_state = ""
         self.region = {}
-        self.scan_sub = rospy.Subscriber(f'/{self.which_robo}/scan', LaserScan, self.scan_cb)
+        self.scan_sub = rospy.Subscriber(self.dummy+'/scan', LaserScan, self.scan_cb)
         self.vel_msg = Twist()
-        self.detect_intruder_pub = rospy.Publsiher(self.dummy+'/see_intruder', see_intruder, queue_size=1)
-        self.detect_intruder_sub=rospy.Subscriber(self.dummy+'/see_intruder', see_intruder,see_intruder_callback)
+        self.detect_intruder_pub = rospy.Publisher(self.dummy+'/see_intruder', see_intruder, queue_size=1)
+        self.detect_intruder_sub=rospy.Subscriber(self.dummy+'/see_intruder', see_intruder,self.see_intruder_callback)
         self.which_robo_see = ""
         self.color_dict = {"rob_a": {"color": "red","low": numpy.array([155,25,0]), "high": numpy.array([245,222,222])}, "rob_b": {"color":"green", "low":numpy.array([45, 100, 100]), "high":numpy.array([75, 255, 255])},
         "rob_c": {"color": "blue", "low": numpy.array([110,50,50]),"high":numpy.array([130,255,255])}, "rob_d": {"color": "yellow", "low": numpy.array([5, 100, 100]), "high": numpy.array([40, 255, 255])}}
@@ -63,8 +63,8 @@ class Follower:
 
         # filter out everything that's not yellow
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_green = numpy.array([45, 100, 100])  # [ 40, 0, 0], ([5, 100, 100]) 
-        upper_green = numpy.array([75, 255, 255]) # [ 120, 255, 255], [40, 255, 255]
+        lower_green = numpy.array([40, 30, 30])  # [ 40, 0, 0], ([5, 100, 100]) 
+        upper_green = numpy.array([84, 255, 255]) # [ 120, 255, 255], [40, 255, 255]
         # what works for the in person tape is [5, 100, 100] - [ 100, 210, 210]
         mask = cv2.inRange(hsv,  lower_green, upper_green)
         masked = cv2.bitwise_and(image, image, mask=mask)
@@ -81,8 +81,7 @@ class Follower:
         M = cv2.moments(mask)
         self.logcount += 1
         print("M00 %d %d" % (M['m00'], self.logcount))
-
-        if M['m00'] == 0:
+        if M['m00'] == 0 and not self.intruder:
             # if you want it to go move around object then run the line below
             # self.go_to_wall()
 
@@ -92,7 +91,8 @@ class Follower:
             self.twist.angular.z = 0.5
             self.cmd_vel_pub.publish(self.twist)
 
-        if M['m00'] > 0:
+        if M['m00'] > 0 and not self.intruder:
+            print("line_follower should be running")
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
             cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
@@ -110,8 +110,9 @@ class Follower:
         # Callback function for scan_sub, which will process the scan data and call on function to update states for wall following
     def scan_cb(self, msg):
         ranges = [0 for i in msg.ranges]
-        #raw_ranges = [i if i>0 else math.inf for i in msg.ranges]
-        raw_ranges = msg.ranges
+        raw_ranges = [i if i>0 else math.inf for i in msg.ranges]
+        #print(raw_ranges)
+        #raw_ranges = msg.ranges
         # make each data the average of itself and four nearby data to avoid noise
         for i in range(len(raw_ranges)):
             ranges[i] = (raw_ranges[i-2]+raw_ranges[i-1]+raw_ranges[i]+raw_ranges[(i+1)%(len(raw_ranges))]+raw_ranges[(i+2)%(len(raw_ranges))])/5
@@ -131,15 +132,22 @@ class Follower:
     # function that will change the state of the robot according to processed scan data
     def change_state(self):
         d = 0.5
-        if self.intruder and self.region[0]<d:
+        if self.intruder and self.region[0]<d and self.region[2]>d:
             self.i_state = "finish_turn"
+            self.twist.linear.x = 0
+            self.twist.angular.z = 0
+            self.cmd_vel_pub.publish(self.twist)
 
         elif self.region[2]<d:
             self.intruder = True
             self.i_state = "turn"
             msg = see_intruder()
             msg.rob_b.data = True
+            print(msg)
             self.detect_intruder_pub.publish(msg)
+            self.twist.linear.x = 0
+            self.twist.angular.z = 0.5
+            self.cmd_vel_pub.publish(self.twist)
     
     def start(self): 
         print("I am running")
