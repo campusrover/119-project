@@ -130,9 +130,9 @@ class Follower:
         self.change_state()
 
     # function that will change the state of the robot according to processed scan data
-    def change_state(self):
+     def change_state(self):
         d = 0.5
-        if self.intruder and self.region[0]<d and self.region[2]>d:
+        if self.intruder and self.region[0]<d and ((self.i_state=='turn_left' and self.region[2]>d) or (self.i_state=='turn_right' and self.region[5]>d)):
             self.i_state = "finish_turn"
             self.twist.linear.x = 0
             self.twist.angular.z = 0
@@ -140,7 +140,7 @@ class Follower:
 
         elif self.region[2]<d:
             self.intruder = True
-            self.i_state = "turn"
+            self.i_state = "turn_left"
             msg = see_intruder()
             msg.rob_b.data = True
             print(msg)
@@ -148,6 +148,18 @@ class Follower:
             self.twist.linear.x = 0
             self.twist.angular.z = 0.5
             self.cmd_vel_pub.publish(self.twist)
+        
+        elif self.region[5]<d:
+            self.intruder = True
+            self.i_state = "turn_right"
+            msg = see_intruder()
+            msg.rob_b.data = True
+            print(msg)
+            self.detect_intruder_pub.publish(msg)
+            self.twist.linear.x = 0
+            self.twist.angular.z = -0.5
+            self.cmd_vel_pub.publish(self.twist)
+    
     
     def start(self): 
         print("I am running")
