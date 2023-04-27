@@ -136,7 +136,7 @@ class Follower:
             self.twist.angular.z = 0
             self.cmd_vel_pub.publish(self.twist)
 
-        elif self.region[2]<d:
+        elif self.region[2]<d and self.which_robo_see=="":
             self.intruder = True
             self.i_state = "turn_left"
             msg = see_intruder()
@@ -147,7 +147,7 @@ class Follower:
             self.twist.angular.z = 0.5
             self.cmd_vel_pub.publish(self.twist)
         
-        elif self.region[5]<d:
+        elif self.region[5]<d and self.which_robo_see=="":
             self.intruder = True
             self.i_state = "turn_right"
             msg = see_intruder()
