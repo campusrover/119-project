@@ -186,8 +186,13 @@ class Follower:
         front_right = ranges[306:341]
         # get minimum value in each region
         self.region = {0: min(front), 1: min(front_left), 2: min(left), 3: min(back_left), 4: min(back_right), 5: min(right), 6: min(front_right)}
-        # update state
-        self.change_state()
+        
+        ## this is when the robot is on the same line then we need to start detecting when to stop in front of your partner
+        if(self.orderList == self.which_robo_see): 
+            if (min(front)<=0.2): 
+                self.twist.linear.x = 0
+                self.twist.angular.z = 0
+                self.cmd_vel_pub.publish(self.twist)
 
     # function that will change the state of the robot according to processed scan data
     def change_state(self):
