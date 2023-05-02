@@ -23,6 +23,7 @@ class Follower:
         # Real robot uses '/raspicam_node/image/compressed'
         self.lower=numpy.array([0,0,0])
         self.higher=None
+        self.stop = False
         self.ifnextline=None
         self.orderlist=["rob_a","rob_c","rob_b","rob_b"]
         self.dummy=self.which_robo['turtlebot3_core']["tf_prefix"]
@@ -39,8 +40,8 @@ class Follower:
             self.order=2
             self.static_order=self.order
         self.which_robo_see = ""
-        self.color_dict = {"rob_a": {"color": "red","low": numpy.array([155,25,0]), "high": numpy.array([245,222,222])}, "rob_b": {"color":"green", "low":numpy.array([45, 100, 100]), "high":numpy.array([75, 255, 255])},
-        "rob_c": {"color": "blue", "low": numpy.array([110,50,50]),"high":numpy.array([130,255,255])}, "rob_b": {"color": "yellow", "low": numpy.array([5, 70, 70]), "high": numpy.array([75,220,220])}}
+        self.color_dict = {"rob_a": {"color": "red","low": numpy.array([155,25,0]), "high": numpy.array([245,222,222])}, "rob_d": {"color":"green", "low":numpy.array([45, 100, 100]), "high":numpy.array([75, 255, 255])},
+        "rob_c": {"color": "blue", "low": numpy.array([100,70,70]),"high":numpy.array([137,220,220])}, "rob_b": {"color": "yellow", "low": numpy.array([5, 70, 70]), "high": numpy.array([75,220,220])}}
 
 
         dict = {"name": self.which_robo}
@@ -94,6 +95,7 @@ class Follower:
                 self.which_robo_see=None
                 self.order=self.static_order
                 self.ifnextline=None
+        print(self.order)
         print("This little bitch see the intruder: "+self.which_robo_see)
 
 
@@ -138,7 +140,7 @@ class Follower:
             # If you want it to move infinitely then you need to have these here. 
             if(self.ifnextline==None and self.other_robo_here==False):
                 self.ifnextline=True
-            if(self.other_robo_here==False):
+            if(self.other_robo_here==False) and (self.stop == False):
                 self.time_since_lost=self.time_since_lost+1
                 self.twist.linear.x = 0
                 self.twist.angular.z = 0.5
@@ -150,7 +152,7 @@ class Follower:
                 self.order=self.static_order
 
 
-        if M['m00'] > 0 and not self.intruder:
+        if M['m00'] > 0 and not self.intruder and (self.stop == False):
             self.state="following_line"
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
@@ -184,20 +186,29 @@ class Follower:
         back_right = ranges[180:269]
         right = ranges[270:305] 
         front_right = ranges[306:341]
+        fronts = front + front_left + front_right
         # get minimum value in each region
         self.region = {0: min(front), 1: min(front_left), 2: min(left), 3: min(back_left), 4: min(back_right), 5: min(right), 6: min(front_right)}
-        
-        ## this is when the robot is on the same line then we need to start detecting when to stop in front of your partner
-        if(self.orderList == self.which_robo_see): 
-            if (min(front)<=0.2): 
+        # update state
+        if self.stop==False: 
+            self.change_state()
+        print(fronts)
+        print(self.which_robo_see + "    " + self.orderlist[self.order]  )
+        if(self.orderlist[self.order] == self.which_robo_see): 
+            print("after if statement " + str(min(fronts)))
+            if (min(fronts)<=0.3): 
+                self.stop = True
+                print(" we in ")
                 self.twist.linear.x = 0
                 self.twist.angular.z = 0
                 self.cmd_vel_pub.publish(self.twist)
+        
+        print(self.twist)
 
     # function that will change the state of the robot according to processed scan data
     def change_state(self):
         d = 0
-        d1=0.2
+        d1=0.3
         if self.intruder and self.region[0]<d and ((self.i_state=='turn_left' and self.region[2]>d) or (self.i_state=='turn_right' and self.region[5]>d)):
             self.i_state = "finish_turn"
             self.twist.linear.x = 0
