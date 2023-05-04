@@ -7,6 +7,7 @@ from nav_msgs.msg import Odometry
 from tf import transformations
 from tf.transformations import euler_from_quaternion
 from communication_msg.msg import see_intruder as see_intruder
+from communication_msg.msg import stop_order as stop_order
 
 
 # rip a lot out of it, how ofeten is callback being called, do a rostopic hz, experiment with reducing image size and color, lower the raspicam_node resolution
@@ -66,6 +67,11 @@ class Follower:
         self.vel_msg = Twist()
         self.detect_intruder_pub = rospy.Publisher('/see_intruder', see_intruder, queue_size=1)
         self.detect_intruder_sub=rospy.Subscriber('/see_intruder', see_intruder,self.see_intruder_callback)
+        self.stop_pub = rospy.Publsiher('/stop', stop_order, queue_size=1)
+        self.stop_sub = rospy.Subscriber('/stop', stop_order, self.stop_callback)
+        self.stop_order = stop_order()
+        self.stop_order.order_list = []
+        self.stop_order.idx = -1
 
 
 # This is the method that will be making the robot find the line that it is going to be following. 
@@ -98,7 +104,11 @@ class Follower:
         print(self.order)
         print("This little bitch see the intruder: "+self.which_robo_see)
 
-
+    def stop_callback(self,msg):
+        self.stop_order.order_list = msg.order_list
+        if msg.idx != -1:
+            if msg.order_list[msg.idx]==self.dummy:
+                self.move_back = True
 
 # This is the method that will be making the robot find the line that it is going to be following. 
     def image_callback(self, msg):
@@ -202,6 +212,8 @@ class Follower:
                 self.twist.linear.x = 0
                 self.twist.angular.z = 0
                 self.cmd_vel_pub.publish(self.twist)
+                self.stop_order.order_list.append(self.dummy)
+                self.stop_order_pub.publish(self.stop_order)
         
         print(self.twist)
 
@@ -209,7 +221,11 @@ class Follower:
     def change_state(self):
         d = 0
         d1=0.3
-        if self.intruder and self.region[0]<d and ((self.i_state=='turn_left' and self.region[2]>d) or (self.i_state=='turn_right' and self.region[5]>d)):
+        if self.i_state == "finish_turn" and self.region[0]>d:
+            self.stop_order.idx = 3
+            self.stop_order_pub.publish(self.stop_order)
+            
+        elif self.intruder and self.region[0]<d and ((self.i_state=='turn_left' and self.region[2]>d) or (self.i_state=='turn_right' and self.region[5]>d)):
             self.i_state = "finish_turn"
             self.twist.linear.x = 0
             self.twist.angular.z = 0
@@ -226,6 +242,9 @@ class Follower:
             self.twist.linear.x = 0
             self.twist.angular.z = 0.5
             self.cmd_vel_pub.publish(self.twist)
+            self.stop_order.order_list.append(self.dummy)
+            self.stop_order_pub.publish(self.stop_order)
+            
         elif(self.region[0]<d1 and self.which_robo_see!=""):
             print("other robo is here, stop moving and wait!")
             self.other_robo_here=True
