@@ -8,12 +8,35 @@ from tf import transformations
 from tf.transformations import euler_from_quaternion
 from communication_msg.msg import see_intruder as see_intruder
 
+
+# rip a lot out of it, how ofeten is callback being called, do a rostopic hz, experiment with reducing image size and color, lower the raspicam_node resolution
 class Follower:
     def __init__(self,name):
         self.which_robo = name
-
+        self.lower_yellow=numpy.array([5, 70, 70])
+        self.higher_yellow=numpy.array([45,220,220])
         self.bridge = cv_bridge.CvBridge()
         # Real robot uses '/raspicam_node/image/compressed'
+        self.lower=None
+        self.higher=None
+        self.ifnextline=None
+        self.orderlist=["rob_a","rob_c","rob_b","rob_d"]
+        self.dummy=self.which_robo['turtlebot3_core']["tf_prefix"]
+        if(self.dummy=="roba"):
+            self.order=0
+            self.static_order=self.order
+        elif(self.dummy=="robb"):
+            self.order=2
+            self.static_order=self.order
+        elif(self.dummy=="robc"):
+            self.order=1
+            self.static_order=self.order
+        elif(self.dummy=="robd"):
+            self.order=3
+            self.static_order=self.order
+        self.which_robo_see = ""
+         self.color_dict = {"rob_a": {"color": "red","low": numpy.array([155,25,0]), "high": numpy.array([245,222,222])}, "rob_d": {"color":"green", "low":numpy.array([45, 100, 100]), "high":numpy.array([75, 255, 255])},
+        "rob_c": {"color": "blue", "low": numpy.array([100,70,70]),"high":numpy.array([137,220,220])}, "rob_b": {"color": "yellow", "low": numpy.array([5, 70, 70]), "high": numpy.array([45,220,220])}}
 
 
         dict = {"name": self.which_robo}
@@ -36,22 +59,39 @@ class Follower:
         self.region = {}
         self.scan_sub = rospy.Subscriber(self.dummy+'/scan', LaserScan, self.scan_cb)
         self.vel_msg = Twist()
-        self.detect_intruder_pub = rospy.Publisher(self.dummy+'/see_intruder', see_intruder, queue_size=1)
-        self.detect_intruder_sub=rospy.Subscriber(self.dummy+'/see_intruder', see_intruder,self.see_intruder_callback)
-        self.which_robo_see = ""
-        self.color_dict = {"rob_a": {"color": "red","low": numpy.array([155,25,0]), "high": numpy.array([245,222,222])}, "rob_b": {"color":"green", "low":numpy.array([45, 100, 100]), "high":numpy.array([75, 255, 255])},
-        "rob_c": {"color": "blue", "low": numpy.array([110,50,50]),"high":numpy.array([130,255,255])}, "rob_d": {"color": "yellow", "low": numpy.array([5, 100, 100]), "high": numpy.array([40, 255, 255])}}
+        self.detect_intruder_pub = rospy.Publisher('/see_intruder', see_intruder, queue_size=1)
+        self.detect_intruder_sub=rospy.Subscriber('/see_intruder', see_intruder,self.see_intruder_callback)
+
 
 
 # This is the method that will be making the robot find the line that it is going to be following. 
     def see_intruder_callback(self, msg):
-        if msg.rob_d.data:
-            self.which_robo_see = "rob_d"
+        print("Here")
+        if msg.rob_a.data:
+            self.which_robo_see = "rob_a"
         elif msg.rob_c.data:
             self.which_robo_see = "rob_c"
-        elif msg.rob_a.data:
-            self.which_robo_see = "rob_a"
-
+        elif msg.rob_d.data:
+            self.which_robo_see = "rob_d"
+        print("This thing see the intruder"+self.which_robo_see)
+        if(self.which_robo_see!=""):
+            if(self.ifnextline==True and self.orderlist[self.order]!=self.which_robo_see and self.state=="turning"):
+                print("I'm so preppared to change the lineeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+                if(self.orderlist.index(self.which_robo_see)>self.static_order):
+                    addon=1
+                else:
+                    addon=-1
+                self.order=self.order+addon            
+                self.lower=self.color_dict[self.orderlist[self.order]]['low']
+                self.higher=self.color_dict[self.orderlist[self.order]]['high']
+                self.ifnextline=False
+            if(self.state=="finish block"):#When the robot finish blocking
+                self.lower=None
+                self.higher=None
+                self.which_robo_see=None
+                self.order=self.static_order
+                self.ifnextline=None
+        print(self.which_robo_see)
 
 
 
@@ -63,11 +103,16 @@ class Follower:
 
         # filter out everything that's not yellow
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        lower_green = numpy.array([40, 30, 30])  # [ 40, 0, 0], ([5, 100, 100]) 
-        upper_green = numpy.array([84, 255, 255]) # [ 120, 255, 255], [40, 255, 255]
-        # what works for the in person tape is [5, 100, 100] - [ 100, 210, 210]
-        mask = cv2.inRange(hsv,  lower_green, upper_green)
-        masked = cv2.bitwise_and(image, image, mask=mask)
+        if(self.lower==None and self.higher==None):
+            lower_yellow = self.lower_yellow  # [ 40, 0, 0], ([5, 100, 100]) 
+            upper_yellow = self.lower_yellow # [ 120, 255, 255], [40, 255, 255]
+            # what works for the in person tape is [5, 100, 100] - [ 100, 210, 210]
+            # print(cv2.cvtColor(image, cv2.COLOR_BGR2HSV))
+            mask = cv2.inRange(hsv,  lower_yellow, upper_yellow)
+            masked = cv2.bitwise_and(image, image, mask=mask)
+        else:
+            mask = cv2.inRange(hsv,  self.lower, self.higher)
+            masked = cv2.bitwise_and(image, image, mask=mask)
 
     # clear all but a 20 pixel band near the top of the image
         h, w, d = image.shape
@@ -81,28 +126,32 @@ class Follower:
         M = cv2.moments(mask)
         self.logcount += 1
         print("M00 %d %d" % (M['m00'], self.logcount))
+
         if M['m00'] == 0 and not self.intruder:
             # if you want it to go move around object then run the line below
             # self.go_to_wall()
-
+            self.state="turning"
             # If you are having it move around object you need to remove the two lines below! 
             # If you want it to move infinitely then you need to have these here. 
+            if(self.ifnextline==None):
+                self.ifnextline=True
             self.twist.linear.x = 0
             self.twist.angular.z = 0.5
             self.cmd_vel_pub.publish(self.twist)
 
         if M['m00'] > 0 and not self.intruder:
-            print("line_follower should be running")
+            self.state="following_line"
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
             cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
-
+            if(self.ifnextline!=None):
+                self.ifnextline=None
             # Move at 0.2 M/sec
             # add a turn if the centroid is not in the center
             # Hope for the best. Lots of failure modes.
             err = cx - w/2
             self.twist.linear.x = 0.2
-            self.twist.angular.z = -float(err) /2500
+            self.twist.angular.z = -float(err) /5000
             self.cmd_vel_pub.publish(self.twist)
         cv2.imshow("image", image)
         cv2.waitKey(3)
@@ -111,7 +160,6 @@ class Follower:
     def scan_cb(self, msg):
         ranges = [0 for i in msg.ranges]
         raw_ranges = [i if i>0 else math.inf for i in msg.ranges]
-        #print(raw_ranges)
         #raw_ranges = msg.ranges
         # make each data the average of itself and four nearby data to avoid noise
         for i in range(len(raw_ranges)):
@@ -130,15 +178,16 @@ class Follower:
         self.change_state()
 
     # function that will change the state of the robot according to processed scan data
-     def change_state(self):
-        d = 0.5
+    def change_state(self):
+        d = 0.2
+        print("The region is here: "+str(self.region))
         if self.intruder and self.region[0]<d and ((self.i_state=='turn_left' and self.region[2]>d) or (self.i_state=='turn_right' and self.region[5]>d)):
             self.i_state = "finish_turn"
             self.twist.linear.x = 0
             self.twist.angular.z = 0
             self.cmd_vel_pub.publish(self.twist)
 
-        elif self.region[2]<d and self.which_robo_see=="":
+        elif self.region[2]<d:
             self.intruder = True
             self.i_state = "turn_left"
             msg = see_intruder()
@@ -149,7 +198,7 @@ class Follower:
             self.twist.angular.z = 0.5
             self.cmd_vel_pub.publish(self.twist)
         
-        elif self.region[5]<d and self.which_robo_see=="":
+        elif self.region[5]<d:
             self.intruder = True
             self.i_state = "turn_right"
             msg = see_intruder()
@@ -165,7 +214,7 @@ class Follower:
         print("I am running")
 
 def main():
-    rospy.init_node("LineF_2")
+    rospy.init_node("Line_F2")
     which_robo = rospy.get_param("~robot_name")
     #name='/'+which_robo['turtlebot3_core']["tf_prefix"]+"follower"
     follower = Follower(which_robo)
