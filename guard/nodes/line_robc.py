@@ -19,26 +19,26 @@ class Follower:
         self.addon=0
         self.time_since_lost=0
         self.bridge = cv_bridge.CvBridge()
-        self.lower_red = numpy.array([100,70,70])  # [ 40, 0, 0], ([5, 100, 100]) 
-        self.upper_red = numpy.array([137,220,220])
+        self.lower_blue = numpy.array([100,70,70])  # [ 40, 0, 0], ([5, 100, 100]) 
+        self.upper_blue = numpy.array([137,220,220])
         # Real robot uses '/raspicam_node/image/compressed'
         self.lower=numpy.array([0,0,0])
         self.higher=None
         self.stop = False
         self.ifnextline=None
-        self.orderlist=["rob_a","rob_c","rob_b","rob_b"]
+        self.orderlist=["rob_a","rob_c","rob_b","rob_d"]
         self.dummy=self.which_robo['turtlebot3_core']["tf_prefix"]
         if(self.dummy=="roba"):
             self.order=0
             self.static_order=self.order
         elif(self.dummy=="robb"):
-            self.order=3
+            self.order=2
             self.static_order=self.order
         elif(self.dummy=="robc"):
             self.order=1
             self.static_order=self.order
         elif(self.dummy=="robd"):
-            self.order=2
+            self.order=3
             self.static_order=self.order
         self.which_robo_see = ""
         self.color_dict = {"rob_a": {"color": "red","low": numpy.array([155,25,0]), "high": numpy.array([245,222,222])}, "rob_d": {"color":"green", "low":numpy.array([45, 100, 100]), "high":numpy.array([75, 255, 255])},
@@ -119,11 +119,11 @@ class Follower:
         # filter out everything that's not yellow
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         if(self.lower.all()==0):
-            lower_red = self.lower_red  # [ 40, 0, 0], ([5, 100, 100]) 
-            upper_red = self.upper_red# [ 120, 255, 255], [40, 255, 255]
+            lower_blue = self.lower_blue  # [ 40, 0, 0], ([5, 100, 100]) 
+            upper_blue = self.upper_blue# [ 120, 255, 255], [40, 255, 255]
             # what works for the in person tape is [5, 100, 100] - [ 100, 210, 210]
             # print(cv2.cvtColor(image, cv2.COLOR_BGR2HSV))
-            mask = cv2.inRange(hsv,  lower_red, upper_red)
+            mask = cv2.inRange(hsv,  lower_blue, upper_blue)
             masked = cv2.bitwise_and(image, image, mask=mask)
         else:
             mask = cv2.inRange(hsv,  self.lower, self.higher)
