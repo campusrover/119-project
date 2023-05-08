@@ -1,4 +1,4 @@
-boolean rob_a
-boolean rob_b
-boolean rob_c
-boolean rob_d
+std_msgs/Bool rob_a
+std_msgs/Bool rob_b
+std_msgs/Bool rob_c
+std_msgs/Bool rob_d
