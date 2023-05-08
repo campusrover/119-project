@@ -1,2 +1,2 @@
-string[] order_list
-int idx
+std_msgs/String[] order_list
+std_msgs/Int8 idx
